@@ -27,13 +27,14 @@ class CRCCCITT(object):
 
             self.starting_value = dict_versions[version]
 
+            # initialize the precalculated tables
             if not len(self.crc_ccitt_tab):
-                self.init_crc_ccitt() # initialize the precalculated tables
+                self.init_crc_ccitt()
         except Exception as e:
             print ("EXCEPTION(calculate): {}".format(e))
 
 
-    def calculate(self, input_data = ''):
+    def calculate(self, input_data = None):
         try:
             is_string = isinstance(input_data, str)
             is_bytes = isinstance(input_data, bytes)

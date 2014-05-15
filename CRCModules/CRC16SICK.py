@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 # CRC16SICK MODULE
-# 
+#
 # Cristian NAVALICI cristian.navalici at gmail dot com
 #
 
@@ -16,17 +16,27 @@ class CRC16SICK(object):
         pass
 
 
-    def calculate(self, string = ''):
+    def calculate(self, input_data = None):
         try:
-            if not isinstance(string, str): raise Exception("Please provide a string as argument for calculation.")
-            if not string: return 0
+            is_string = isinstance(input_data, str)
+            is_bytes = isinstance(input_data, bytes)
+
+            if not is_string and not is_bytes:
+                raise Exception("Please provide a string or a byte sequence as argument for calculation.")
+
             crcValue = 0x0000
 
-            for idx, c in enumerate(string):
-                short_c  =  0x00ff & ord(c)
+            for idx, c in enumerate(input_data):
+                d = ord(c) if is_string else c
+                short_c  =  0x00ff & d
 
                 idx_previous = idx - 1
-                prev_c = 0 if idx_previous == -1 else ord(string[idx_previous])
+                if idx_previous == -1:
+                    prev_c = 0
+                else:
+                    prev_c = input_data[idx_previous]
+                    prev_c = ord(prev_c) if is_string else prev_c
+
                 short_p  = ( 0x00ff & prev_c) << 8;
 
                 if ( crcValue & 0x8000 ):   crcValue = c_ushort(crcValue << 1).value ^ self.crc16SICK_constant
@@ -35,14 +45,12 @@ class CRC16SICK(object):
                 crcValue &= 0xffff
                 crcValue ^= ( short_c | short_p )
 
-            # After processing, the one's complement of the CRC is calcluated and the 
+            # After processing, the one's complement of the CRC is calcluated and the
             # two bytes of the CRC are swapped.
             low_byte   = (crcValue & 0xff00) >> 8
             high_byte  = (crcValue & 0x00ff) << 8
             crcValue   = low_byte | high_byte;
 
             return crcValue
-        except Exception, e:
-            print "EXCEPTION(calculate): {}".format(e)
-
-
+        except Exception as e:
+            print ("EXCEPTION(calculate): {}".format(e))
