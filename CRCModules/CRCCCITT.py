@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 # CRC CCITT
@@ -7,7 +7,7 @@
 # (XModem)  starting value: 0x0000
 #           starting value: 0xffff
 #           starting value: 0x1d0f
-# 
+#
 # Cristian NAVALICI cristian.navalici at gmail dot com
 
 
@@ -26,40 +26,44 @@ class CRCCCITT(object):
                 raise Exception("Your version parameter should be one of the {} options".format("|".join(dict_versions.keys())))
 
             self.starting_value = dict_versions[version]
-            if not len(self.crc_ccitt_tab): self.init_crc_ccitt() # initialize the precalculated tables
-        except Exception, e:
-            print e
+
+            if not len(self.crc_ccitt_tab):
+                self.init_crc_ccitt() # initialize the precalculated tables
+        except Exception as e:
+            print ("EXCEPTION(calculate): {}".format(e))
 
 
-    def calculate(self, string = ''):
+    def calculate(self, input_data = ''):
         try:
-            if not isinstance(string, str): raise Exception("Please provide a string as argument for calculation.")
-            if not string: return 0
+            is_string = isinstance(input_data, str)
+            is_bytes = isinstance(input_data, bytes)
+
+            if not is_string and not is_bytes:
+                raise Exception("Please provide a string or a byte sequence as argument for calculation.")
 
             crcValue = self.starting_value
 
-            for c in string:
-                tmp = (c_ushort(crcValue >> 8).value) ^ ord(c)
+            for c in input_data:
+                d = ord(c) if is_string else c
+                tmp = (c_ushort(crcValue >> 8).value) ^ d
                 crcValue = (c_ushort(crcValue << 8).value) ^ int(self.crc_ccitt_tab[tmp], 0)
 
             return crcValue
-        except Exception, e:
-            print "EXCEPTION(calculate): {}".format(e)
+        except Exception as e:
+            print ("EXCEPTION(calculate): {}".format(e))
 
 
     def init_crc_ccitt(self):
-        '''The algorithm use tables with precalculated values'''
+        '''The algorithm uses tables with precalculated values'''
         for i in range(0, 256):
             crc = 0
             c = i << 8
 
             for j in range(0, 8):
-                if ((crc ^ c) & 0x8000):  crc = c_ushort(crc << 1).value ^ self.crc_ccitt_constant
-                else: crc = c_ushort(crc << 1).value
+                if ((crc ^ c) & 0x8000):
+                    crc = c_ushort(crc << 1).value ^ self.crc_ccitt_constant
+                else:
+                    crc = c_ushort(crc << 1).value
 
                 c = c_ushort(c << 1).value # equiv c = c << 1
             self.crc_ccitt_tab.append(hex(crc))
-
-
-
-
